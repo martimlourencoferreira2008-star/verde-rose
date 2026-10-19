@@ -886,10 +886,14 @@ async function askAI(question){
     return;
   }
 
-  // Fora do Claude: chama a tua própria função de servidor, que guarda a
-  // chave da API em segurança. Ver netlify/functions/ask.js.
+  // Fora do Claude: chama a função de servidor quando a app está no Netlify.
+  // O GitHub Pages só aloja ficheiros estáticos e não executa esta função.
+  if(location.hostname.endsWith('github.io')){
+    aiBubble.textContent = 'O assistente por IA precisa de uma função de servidor e não funciona diretamente no GitHub Pages.';
+    return;
+  }
   try{
-    const res = await fetch('/.netlify/functions/ask', {
+    const res = await fetch('./.netlify/functions/ask', {
       method: 'POST',
       headers: {'content-type':'application/json'},
       body: JSON.stringify({turns})
