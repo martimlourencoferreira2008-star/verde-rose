@@ -9,6 +9,57 @@
 <meta name="apple-mobile-web-app-title" content="Verde &amp; Rose">
 <meta name="theme-color" content="#1f5d3a">
 <link rel="manifest" href="manifest.webmanifest">
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js';
+  import { getAI, getGenerativeModel, GoogleAIBackend } from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-ai.js';
+  import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-app-check.js';
+
+  const firebaseConfig = window.VR_CONFIG?.FIREBASE_CONFIG;
+  const appCheckSiteKey = window.VR_CONFIG?.FIREBASE_APP_CHECK_SITE_KEY;
+  let model;
+  let firebaseInitError;
+
+  window.generateFirebaseContent = async ({turns, image}) => {
+    if (!model) {
+      const detail = firebaseInitError ? ` ${firebaseInitError.message}` : '';
+      throw new Error(`O Firebase AI Logic não está inicializado. Verifica a configuração Firebase e App Check.${detail}`);
+    }
+
+    const contents = turns.map(turn => ({
+      role: turn.role === 'assistant' ? 'model' : 'user',
+      parts: [{text: turn.content}],
+    }));
+
+    if (image?.data) {
+      contents[contents.length - 1].parts.push({
+        inlineData: {mimeType: image.mime || 'image/jpeg', data: image.data},
+      });
+    }
+
+    const result = await model.generateContent({contents});
+    return {text: result.response.text()};
+  };
+
+  if (firebaseConfig && appCheckSiteKey) {
+    try {
+      const app = initializeApp(firebaseConfig);
+      initializeAppCheck(app, {
+        provider: new ReCaptchaV3Provider(appCheckSiteKey),
+        isTokenAutoRefreshEnabled: true,
+      });
+      const ai = getAI(app, {backend: new GoogleAIBackend()});
+      model = getGenerativeModel(ai, {
+        model: 'gemini-3.8-flash',
+        generationConfig: {maxOutputTokens: 700},
+      });
+    } catch (error) {
+      firebaseInitError = error;
+      console.error('Não foi possível iniciar o Firebase AI Logic:', error);
+    }
+  }
+</script>
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <title>Verde & Rose</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -95,12 +146,46 @@ main{padding: 16px 20px 100px;}
 .chip.active{background:var(--sage-deep); color:#f2ede2; border-color:var(--sage-deep);}
 .bouquet-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
 .bouquet-card{background:var(--card); border:1px solid var(--line); border-radius:16px; overflow:hidden;}
-.bouquet-art{height:100px; display:flex;align-items:center;justify-content:center;}
+.bouquet-art{height:120px; display:flex;align-items:center;justify-content:center; overflow:hidden;}
+.bouquet-art img{width:100%;height:100%;object-fit:cover;}
 .bouquet-body{padding:10px 12px 12px;}
 .bouquet-body h3{font-size:.85rem; font-weight:600; line-height:1.2;}
 .bouquet-body .price{font-size:.8rem; color:var(--gold); font-weight:600; margin:4px 0 8px;}
 .add-btn{width:100%; border:none; background:var(--sage-deep); color:#f2ede2; font-size:.75rem; font-weight:600; padding:8px; border-radius:9px; cursor:pointer;}
 .add-btn.added{background:var(--rose);}
+
+/* Feed */
+.feed-heading{margin:4px 0 16px;}
+.feed-heading h2{font-family:'Fraunces',serif;font-size:1.45rem;}
+.feed-heading p{font-size:.82rem;color:var(--ink-soft);margin-top:4px;}
+.curiosity-card{padding:16px;border-radius:20px;background:linear-gradient(135deg,#fff1d8,#f8dfd3);color:#493d2d;margin-bottom:18px;}
+.curiosity-label{display:flex;align-items:center;gap:7px;font-size:.7rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#8b6341;margin-bottom:7px;}
+.curiosity-card p{font-family:'Fraunces',serif;font-size:1rem;line-height:1.45;}
+.post-composer,.post-card{background:var(--card);border:1px solid var(--line);border-radius:20px;margin-bottom:14px;overflow:hidden;}
+.post-composer{padding:14px;}
+.post-composer textarea{display:block;width:100%;min-height:74px;resize:vertical;border:0;outline:0;background:transparent;color:var(--ink);font:inherit;font-size:.88rem;line-height:1.5;}
+.composer-actions{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-top:10px;border-top:1px solid var(--line);}
+.feed-photo-pick{font-size:.78rem;color:var(--sage-deep);font-weight:600;cursor:pointer;}
+.feed-publish{padding:9px 16px;border:0;border-radius:20px;background:var(--sage-deep);color:#fff;font-size:.78rem;font-weight:600;cursor:pointer;}
+.feed-preview{display:block;width:100%;max-height:210px;object-fit:cover;border-radius:12px;margin:6px 0 10px;}
+.post-card{animation:rise .35s ease both;}
+.post-header{display:flex;align-items:center;gap:10px;padding:13px 14px;}
+.post-avatar{width:38px;height:38px;display:grid;place-items:center;flex:none;border-radius:50%;background:var(--grad-green);color:#fff;font-family:'Fraunces',serif;font-size:1rem;font-weight:600;}
+.post-author{font-size:.8rem;font-weight:600;}
+.post-location{font-size:.68rem;color:var(--ink-soft);margin-top:3px;}
+.post-photo{display:block;width:100%;aspect-ratio:1/1;object-fit:cover;background:var(--cream);}
+.post-actions{display:flex;gap:16px;padding:11px 14px 0;}
+.post-action{display:flex;align-items:center;gap:6px;border:0;background:none;color:var(--ink);font:inherit;font-size:.78rem;cursor:pointer;}
+.post-action svg{width:22px;height:22px;}
+.post-action.liked{color:var(--rose);}
+.post-caption{padding:8px 14px 4px;font-size:.8rem;line-height:1.5;overflow-wrap:anywhere;}
+.post-caption b{margin-right:5px;}
+.post-comments{padding:4px 14px 13px;}
+.post-comment{font-size:.75rem;line-height:1.5;margin:5px 0;overflow-wrap:anywhere;}
+.post-comment b{margin-right:5px;}
+.post-comment-form{display:flex;gap:8px;margin-top:8px;}
+.post-comment-form input{flex:1;min-width:0;border:0;border-top:1px solid var(--line);padding:10px 0 2px;background:transparent;color:var(--ink);font:inherit;font-size:.76rem;}
+.post-comment-form button{border:0;background:none;color:var(--sage-deep);font-size:.75rem;font-weight:600;cursor:pointer;}
 
 /* Assistente (AI) */
 .ai-intro{color:var(--ink-soft); font-size:.85rem; margin-bottom:14px;}
@@ -250,6 +335,55 @@ nav.bottom button{ min-height:52px; }
 .hist{ font-size:.78rem; color:var(--ink-soft); margin:-2px 0 12px; }
 .order-row{ font-size:.8rem; padding:8px 0; border-top:1px solid var(--line); display:flex; justify-content:space-between; gap:8px; }
 #orderList{ margin-bottom:12px; }
+/* ---- Zen: papel, verde e branco, sem brilho digital ---- */
+:root{ --cream:#fbfdf9; --card:rgba(255,255,255,.74); --sage:#6f8f6a; --sage-deep:#3f5e44; --rose:#b0795f; --gold:#a38a5c; --ink:#243127; --ink-soft:#4b594f; --line:rgba(63,94,68,.12); --grad-green:#3f5e44; --grad-rose:#b0795f; }
+*{ animation:none!important; }
+body{ background:linear-gradient(180deg,#fcfdfa 0%,#fcfdfa 34%,#e9f1e4 70%,#cfe0c8 100%); background-attachment:fixed; }
+body::before{ content:''; position:fixed; left:0; right:0; bottom:0; height:46vh; pointer-events:none; z-index:-1; opacity:.5; background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300' preserveAspectRatio='xMidYMax slice'%3E%3Cg fill='none' stroke='%233f5e44' stroke-opacity='.22' stroke-width='1.2'%3E%3Cpath d='M-10 300C40 210 70 160 130 120C120 190 90 250 40 300Z'/%3E%3Cpath d='M70 300C110 230 170 180 230 170C210 230 150 280 100 300Z'/%3E%3Cpath d='M300 300C310 230 350 170 420 130C420 200 380 270 330 300Z'/%3E%3Cpath d='M0 290C60 240 110 220 150 215M80 300C130 262 180 240 220 232M310 300C340 250 380 205 410 170'/%3E%3C/g%3E%3C/svg%3E") bottom/cover no-repeat; }
+header{ background:#fcfdfa; }
+.plant-card,.bouquet-card,.idcard,.idres,.tip,.stat{ background:var(--card); border:1px solid var(--line); box-shadow:none; border-radius:22px; }
+.stat,.stat-row .stat:nth-child(2){ background:var(--card)!important; color:var(--ink); }
+.stat::after{ display:none; }
+.stat b{ color:var(--sage-deep); }
+.stat-row .stat:nth-child(2) b{ color:var(--rose); }
+.stat span{ opacity:.8; }
+.tip{ color:var(--ink); }
+.hero-banner{ background:#dbe8d5; color:#2d4431; box-shadow:none; border-radius:24px; }
+.hero-banner svg{ stroke:#3f5e44; opacity:.35; }
+.plant-thumb{ background:#cfe0c8; box-shadow:none; }
+.plant-thumb svg{ color:#3f5e44; }
+.water-btn,.add-btn,.btn-solid,.btn-solid-wide{ background:#3f5e44; box-shadow:none; }
+.add-btn.added{ background:#b0795f; }
+.pill.active,.chip.active{ background:#3f5e44; box-shadow:none; }
+.search{ box-shadow:none; border:1px solid var(--line); background:var(--card); }
+.fab{ background:#3f5e44; box-shadow:0 4px 14px rgba(63,94,68,.25); }
+.bar i{ background:#6f8f6a; }
+.bar.late i{ background:#b0795f; }
+nav.bottom{ background:rgba(255,255,255,.86); box-shadow:0 -1px 0 rgba(63,94,68,.1); }
+nav.bottom button.active{ background:rgba(111,143,106,.18); }
+.icon-btn{ box-shadow:none; border:1px solid var(--line); }
+.brand h1 span{ background:none; -webkit-background-clip:border-box; background-clip:border-box; color:var(--rose); }
+.toast{ background:#3f5e44; box-shadow:none; }
+.bubble.user{ background:#3f5e44; }
+#gate{ color:#2d4431; background:linear-gradient(180deg,#fcfdfa 0%,#f1f6ec 42%,#cddfc6 100%); }
+.g-deco{ stroke:#3f5e44; opacity:.12; }
+.g-logo,.g-logo-sm{ color:#3f5e44; }
+.g-btn{ background:#3f5e44; color:#fff; box-shadow:none; }
+.g-link,.g-back{ color:#2d4431; }
+.g-input{ color:#2d4431; border-bottom-color:rgba(45,68,49,.4); }
+.g-input::placeholder{ color:rgba(45,68,49,.55); }
+.g-input:focus{ border-bottom-color:#2d4431; }
+.g-note{ background:rgba(63,94,68,.08); }
+.g-ghost{ color:#2d4431; border-color:rgba(45,68,49,.4); }
+.gerr{ color:#a14a3b; }
+.idcard{ padding:16px; margin-bottom:14px; display:flex; flex-direction:column; gap:8px; }
+.idcard b{ font-family:'Fraunces',serif; font-size:1rem; }
+.idcard span{ font-size:.8rem; color:var(--ink-soft); }
+.idres{ padding:16px; margin-bottom:14px; font-size:.85rem; line-height:1.5; }
+.idres:empty{ display:none; }
+.idres h3{ font-family:'Fraunces',serif; font-size:1.1rem; }
+.idres .idsp{ font-style:italic; color:var(--ink-soft); margin-bottom:6px; }
+.idres .btn-solid,.idcard .btn-solid{ width:100%; margin-top:6px; }
 </style>
 </head>
 <body>
@@ -344,6 +478,25 @@ nav.bottom button{ min-height:52px; }
     <div class="tip"><b>Dica do dia</b><span id="dailyTip"></span></div>
   </section>
 
+  <section class="tab" id="tab-feed">
+    <div class="feed-heading"><h2>Comunidade</h2><p>Ideias e momentos verdes para inspirar o teu dia.</p></div>
+    <article class="curiosity-card">
+      <div class="curiosity-label"><span aria-hidden="true">✦</span> Curiosidade do dia</div>
+      <p id="dailyCuriosity"></p>
+    </article>
+    <form class="post-composer" id="feedComposer">
+      <textarea id="feedText" maxlength="500" placeholder="Partilha algo do teu jardim…" aria-label="Escreve a tua publicação"></textarea>
+      <img class="feed-preview" id="feedPreview" alt="Pré-visualização da fotografia" hidden>
+      <div class="composer-actions">
+        <label class="feed-photo-pick">＋ Fotografia
+          <input type="file" id="feedPhoto" accept="image/*" hidden>
+        </label>
+        <button class="feed-publish" type="submit">Publicar</button>
+      </div>
+    </form>
+    <div id="feedPosts" aria-live="polite"></div>
+  </section>
+
   <section class="tab" id="tab-flor">
     <div class="hero-banner">
       <svg viewBox="0 0 100 100" fill="none" stroke="#f2ede2" stroke-width="1.4"><path d="M50 12c-6 12-20 16-20 32a20 20 0 0040 0c0-16-14-20-20-32z"/></svg>
@@ -362,6 +515,8 @@ nav.bottom button{ min-height:52px; }
 
   <section class="tab" id="tab-ai">
     <p class="ai-intro">Pergunta ao nosso jardineiro-florista. Cuidados de plantas, escolha de arranjos, o que precisares.</p>
+    <div class="idcard"><b>Identificar planta</b><span>Tira uma foto e eu digo-te a espécie e os cuidados.</span><button class="btn-solid" id="idBtn">Tirar ou escolher foto</button><input type="file" id="idInput" accept="image/*" hidden></div>
+    <div class="idres" id="idResult"></div>
     <div class="ai-suggestions" id="aiSuggestions">
       <button class="ai-chip">Como cuido de uma Monstera?</button>
       <button class="ai-chip">Que flores duram mais tempo?</button>
@@ -386,6 +541,10 @@ nav.bottom button{ min-height:52px; }
   <button data-tab="flor">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/></svg>
     Floricultura
+  </button>
+  <button data-tab="feed">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="18" cy="6" r="1" fill="currentColor" stroke="none"/></svg>
+    Comunidade
   </button>
   <button data-tab="ai">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l1.8 4.6L18 9.4l-4.2 1.8L12 16l-1.8-4.8L6 9.4l4.2-1.8L12 3z"/><path d="M5 17l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8.8-2z"/></svg>
@@ -474,16 +633,33 @@ let claudeDb = null, claudeUser = null, claudeAssets = null, claudeSample = null
 let uid = null;
 let plants = [], cart = [], remindersEnabled = true;
 let bouquets = [
-  {id:1, name:"Poesia de Peónias", cat:"romance", price:78, c1:"#e9d3cd", c2:"#c17a6b"},
-  {id:2, name:"Tons Pastel", cat:"romance", price:52, c1:"#f0e2df", c2:"#d9a79b"},
-  {id:3, name:"Verde Silvestre", cat:"rustico", price:45, c1:"#dfe6d5", c2:"#5c7357"},
-  {id:4, name:"Colheita Rústica", cat:"rustico", price:63, c1:"#ece0c4", c2:"#9c7d3f"},
-  {id:5, name:"Serenidade Zen", cat:"minimal", price:58, c1:"#e5e9e1", c2:"#33472f"},
-  {id:6, name:"Cascata de Orquídeas", cat:"minimal", price:92, c1:"#f2f0ea", c2:"#7c8a72"},
+  {id:1, name:"Poesia de Peónias", cat:"romance", price:78, c1:"#e9d3cd", c2:"#c17a6b", image:"images/arranjo-peonias.jpg"},
+  {id:2, name:"Tons Pastel", cat:"romance", price:52, c1:"#f0e2df", c2:"#d9a79b", image:"images/arranjo-pastel.jpg"},
+  {id:3, name:"Verde Silvestre", cat:"rustico", price:45, c1:"#dfe6d5", c2:"#5c7357", image:"images/arranjo-silvestre.jpg"},
+  {id:4, name:"Colheita Rústica", cat:"rustico", price:63, c1:"#ece0c4", c2:"#9c7d3f", image:"images/arranjo-rustico.jpg"},
+  {id:5, name:"Serenidade Zen", cat:"minimal", price:58, c1:"#e5e9e1", c2:"#33472f", image:"images/arranjo-zen.jpg"},
+  {id:6, name:"Cascata de Orquídeas", cat:"minimal", price:92, c1:"#f2f0ea", c2:"#7c8a72", image:"images/arranjo-orquideas.jpg"},
+];
+const starterPosts = [
+  {id:"starter-1", author:"Inês Costa", location:"Lisboa", image:"images/arranjo-peonias.jpg", caption:"As primeiras peónias da época trouxeram um bocadinho de primavera cá para casa. 🌸", likes:24},
+  {id:"starter-2", author:"Miguel Rocha", location:"Porto", image:"images/arranjo-silvestre.jpg", caption:"Um cantinho verde e um café: a minha pausa preferida do dia. 🌿", likes:18},
+  {id:"starter-3", author:"Leonor Alves", location:"Coimbra", image:"images/arranjo-pastel.jpg", caption:"Flores simples, luz da manhã e a casa fica logo diferente. 🌷", likes:31},
+];
+const dailyCuriosities = [
+  "As raízes das plantas também precisam de oxigénio. Um vaso com boa drenagem ajuda a evitar que fiquem encharcadas.",
+  "As orquídeas absorvem humidade do ar pelas raízes expostas; por isso, muitas crescem agarradas a árvores na natureza.",
+  "As plantas jovens de girassol acompanham o movimento do sol durante o dia. As flores maduras tendem a ficar viradas para leste.",
+  "As minhocas ajudam a arejar o solo e a transformar matéria orgânica em nutrientes úteis para as plantas.",
+  "Algumas flores têm padrões ultravioleta invisíveis para nós, mas que ajudam os polinizadores a encontrar o néctar.",
+  "A sanseviéria usa o metabolismo CAM: consegue absorver dióxido de carbono durante a noite, ao contrário de muitas plantas.",
+  "As folhas não são apenas verdes: a clorofila reflete a luz verde e usa sobretudo outras cores da luz para a fotossíntese.",
 ];
 let activeFilter = "todas";
 let chatTurns = [];
 let pendingPhotoId = null;
+let pendingFeedImage = null;
+let feedState = {posts: [], likes: [], comments: {}};
+const openFeedComments = new Set();
 
 function showToast(msg){
   const t = document.getElementById('toast');
@@ -516,7 +692,7 @@ function plantsCol(){ return userCol().doc('garden-'+acctKey).collection('plants
 
 async function loadFromDb(){
   const snap = await plantsCol().get();
-  plants = snap.docs.map(d=>{ const v=d.data(); return {id:d.id, ...v, photoUrl: v.photoId ? '/_blob/'+v.photoId : null}; });
+  plants = snap.docs.map(d=>{ const v=d.data(); return {id:d.id, ...v, photoUrl: v.photoId ? '/_blob/'+v.photoId : (v.photo || null)}; });
   try{
     const c = await cartDoc().get();
     cart = c.exists ? (c.data().items||[]) : [];
@@ -593,7 +769,7 @@ function renderBouquets(){
     div.className = 'bouquet-card';
     div.innerHTML = `
       <div class="bouquet-art" style="background:linear-gradient(140deg,${b.c1},${b.c2});">
-        <svg width="44" height="44" viewBox="0 0 40 40" fill="none" stroke="#ffffff" stroke-width="1.3" opacity=".9"><path d="M20 6c-2 6-8 8-8 15a8 8 0 0016 0c0-7-6-9-8-15z"/><path d="M20 15v19" stroke-linecap="round"/></svg>
+        <img src="${b.image}" alt="${b.name}" loading="lazy" decoding="async">
       </div>
       <div class="bouquet-body">
         <h3></h3>
@@ -610,6 +786,116 @@ function renderBouquets(){
         cart.push({id:b.id, name:b.name, price:b.price});
         await saveCart(); updateCartBadge(); renderBouquets();
         showToast(b.name + ' adicionado ao carrinho');
+      }
+    };
+  });
+}
+
+function loadFeedState(){
+  try{
+    const saved = JSON.parse(localStorage.getItem('vr_feed_'+acctKey)||'{}');
+    return {
+      posts: Array.isArray(saved.posts) ? saved.posts.filter(p=>
+        p && typeof p.id==='string' && /^[a-zA-Z0-9-]+$/.test(p.id) &&
+        typeof p.author==='string' && typeof p.caption==='string' &&
+        (p.image==='' || /^data:image\/(?:jpeg|png|webp);base64,/i.test(p.image))
+      ) : [],
+      likes: Array.isArray(saved.likes) ? saved.likes.filter(id=>typeof id==='string') : [],
+      comments: saved.comments && typeof saved.comments==='object' && !Array.isArray(saved.comments)
+        ? saved.comments : {},
+    };
+  }catch(e){
+    showToast('Não foi possível carregar as publicações guardadas.');
+    return {posts: [], likes: [], comments: {}};
+  }
+}
+
+function saveFeedState(){
+  localStorage.setItem('vr_feed_'+acctKey, JSON.stringify(feedState));
+}
+
+function renderFeed(){
+  const date = new Date();
+  const dayOfYear = Math.floor((Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())-Date.UTC(date.getFullYear(), 0, 0))/DAY);
+  document.getElementById('dailyCuriosity').textContent = dailyCuriosities[dayOfYear%dailyCuriosities.length];
+  const container = document.getElementById('feedPosts');
+  container.textContent = '';
+  const posts = [...feedState.posts, ...starterPosts];
+  posts.forEach(post=>{
+    const card = document.createElement('article');
+    card.className = 'post-card';
+    const comments = Array.isArray(feedState.comments[post.id]) ? feedState.comments[post.id] : [];
+    const liked = feedState.likes.includes(post.id);
+    card.innerHTML = `
+      <div class="post-header">
+        <div class="post-avatar" aria-hidden="true"></div>
+        <div><div class="post-author"></div><div class="post-location"></div></div>
+      </div>
+      ${post.image ? `<img class="post-photo" src="${post.image}" alt="Fotografia de uma publicação de jardinagem" loading="lazy" decoding="async">` : ''}
+      <div class="post-actions">
+        <button class="post-action ${liked?'liked':''}" type="button" data-action="like" aria-pressed="${liked}">
+          <svg viewBox="0 0 24 24" fill="${liked?'currentColor':'none'}" stroke="currentColor" stroke-width="1.8"><path d="M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 00-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 00-.1-7.8z"/></svg>
+          <span>${(post.likes||0)+(liked?1:0)}</span>
+        </button>
+        <button class="post-action" type="button" data-action="comments" aria-expanded="${openFeedComments.has(post.id)}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.4 8.4 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.4 8.4 0 01-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.4 8.4 0 013.8-.9h.5a8.5 8.5 0 018 8v.5z"/></svg>
+          <span>${comments.length} comentários</span>
+        </button>
+      </div>
+      <p class="post-caption"><b></b></p>
+      <div class="post-comments" ${openFeedComments.has(post.id)?'':'hidden'}>
+        <div class="post-comment-list"></div>
+        <form class="post-comment-form">
+          <input name="comment" maxlength="240" placeholder="Escreve um comentário…" aria-label="Escreve um comentário" required>
+          <button type="submit">Enviar</button>
+        </form>
+      </div>`;
+    card.querySelector('.post-avatar').textContent = (post.author || 'V').trim().charAt(0).toUpperCase();
+    card.querySelector('.post-author').textContent = post.author || 'Visitante';
+    card.querySelector('.post-location').textContent = post.location || 'O meu jardim';
+    card.querySelector('.post-caption b').textContent = post.author || 'Visitante';
+    card.querySelector('.post-caption').append(document.createTextNode(post.caption));
+    const commentList = card.querySelector('.post-comment-list');
+    comments.forEach(comment=>{
+      if(!comment || typeof comment.text!=='string') return;
+      const line = document.createElement('p');
+      line.className = 'post-comment';
+      const author = document.createElement('b');
+      author.textContent = comment.author || 'Visitante';
+      line.append(author, document.createTextNode(comment.text));
+      commentList.appendChild(line);
+    });
+    container.appendChild(card);
+    card.querySelector('[data-action="like"]').onclick = ()=>{
+      const likedNow = feedState.likes.includes(post.id);
+      feedState.likes = likedNow
+        ? feedState.likes.filter(id=>id!==post.id)
+        : [...feedState.likes, post.id];
+      try{ saveFeedState(); renderFeed(); }
+      catch(e){
+        feedState.likes = likedNow
+          ? [...feedState.likes, post.id]
+          : feedState.likes.filter(id=>id!==post.id);
+        showToast('Não foi possível guardar o gosto. Verifica o espaço disponível no dispositivo.');
+        renderFeed();
+      }
+    };
+    card.querySelector('[data-action="comments"]').onclick = ()=>{
+      if(openFeedComments.has(post.id)) openFeedComments.delete(post.id);
+      else openFeedComments.add(post.id);
+      renderFeed();
+    };
+    card.querySelector('.post-comment-form').onsubmit = e=>{
+      e.preventDefault();
+      const input = e.currentTarget.elements.comment;
+      const text = input.value.trim();
+      if(!text) return;
+      const existing = Array.isArray(feedState.comments[post.id]) ? feedState.comments[post.id] : [];
+      feedState.comments[post.id] = [...existing, {author: document.getElementById('profName').textContent || 'Visitante', text}];
+      try{ saveFeedState(); openFeedComments.add(post.id); renderFeed(); }
+      catch(err){
+        feedState.comments[post.id] = existing;
+        showToast('Não foi possível guardar o comentário. Verifica o espaço disponível no dispositivo.');
       }
     };
   });
@@ -678,7 +964,7 @@ document.getElementById('gateEnter').onclick = async ()=>{
   }
   if(!usedDb) lsLoad();
   document.getElementById('remindersToggle').classList.toggle('on', remindersEnabled);
-  renderPlants(); renderBouquets(); updateCartBadge(); notifyDue();
+  renderPlants(); renderBouquets(); feedState = loadFeedState(); renderFeed(); updateCartBadge(); notifyDue();
 };
 
 /* ---------- nav ---------- */
@@ -690,8 +976,63 @@ document.querySelectorAll('nav.bottom button').forEach(btn=>{
     document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
     document.getElementById('fabAdd').style.display = btn.dataset.tab==='jardim' ? 'flex' : 'none';
     document.getElementById('aiInputRow').hidden = btn.dataset.tab!=='ai';
+    if(btn.dataset.tab==='feed'){ feedState = loadFeedState(); renderFeed(); }
   };
 });
+
+document.getElementById('feedPhoto').onchange = e=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  if(!file.type.startsWith('image/')){
+    showToast('Escolhe um ficheiro de imagem.');
+    e.target.value = '';
+    return;
+  }
+  if(file.size > 10*1024*1024){
+    showToast('A fotografia deve ter menos de 10 MB.');
+    e.target.value = '';
+    return;
+  }
+  pendingFeedImage = file;
+  const preview = document.getElementById('feedPreview');
+  shrinkURL(file).then(url=>{ preview.src = url; preview.hidden = false; }).catch(()=>{
+    pendingFeedImage = null;
+    e.target.value = '';
+    showToast('Não foi possível abrir esta fotografia.');
+  });
+};
+
+document.getElementById('feedComposer').onsubmit = async e=>{
+  e.preventDefault();
+  const input = document.getElementById('feedText');
+  const caption = input.value.trim();
+  if(!caption){ showToast('Escreve uma mensagem antes de publicar.'); input.focus(); return; }
+  let image = '';
+  try{
+    if(pendingFeedImage) image = await shrinkURL(pendingFeedImage);
+    const post = {
+      id: 'post-'+Date.now()+'-'+Math.random().toString(36).slice(2, 8),
+      author: document.getElementById('profName').textContent || 'Visitante',
+      location: 'O meu jardim',
+      image,
+      caption,
+      likes: 0,
+    };
+    feedState.posts.unshift(post);
+    try{ saveFeedState(); }
+    catch(error){ feedState.posts.shift(); throw error; }
+    input.value = '';
+    document.getElementById('feedPhoto').value = '';
+    pendingFeedImage = null;
+    const preview = document.getElementById('feedPreview');
+    preview.removeAttribute('src');
+    preview.hidden = true;
+    renderFeed();
+    showToast('Publicação adicionada ao teu feed.');
+  }catch(error){
+    showToast('Não foi possível publicar. Verifica o espaço disponível no dispositivo.');
+  }
+};
 
 document.getElementById('chipRow').addEventListener('click', e=>{
   const chip = e.target.closest('.chip'); if(!chip) return;
@@ -753,7 +1094,7 @@ document.getElementById('photoInput').onchange = async (e)=>{
     pendingPhotoId = null;
     const reader = new FileReader();
     reader.onload = ()=>{ box.innerHTML = `<img src="${reader.result}" alt="">`; };
-    reader.readAsDataURL(file);
+    shrinkURL(file).then(u=>{ box.innerHTML = `<img src="${u}" alt="">`; }).catch(()=>reader.readAsDataURL(file));
   }
 };
 document.getElementById('pSave').onclick = async ()=>{
@@ -769,13 +1110,13 @@ document.getElementById('pSave').onclick = async ()=>{
     const p = plants.find(x=>x.id===editingPlantId);
     Object.assign(p, {name, loc, freq, species, photoId: pendingPhotoId || null, photoUrl});
     if(claudeDb && uid){
-      try{ await plantsCol().doc(editingPlantId).update({name, loc, freq, species, photoId: pendingPhotoId || null}); }
+      try{ await plantsCol().doc(editingPlantId).update({name, loc, freq, species, photoId: pendingPhotoId || null, photo: dataPhoto(photoUrl)}); }
       catch(e){ showToast('Não foi possível sincronizar — guardado só neste dispositivo.'); }
     } else lsSave();
     showToast(name + ' atualizada');
   } else {
     if(claudeDb && uid){
-      const doc = {name, loc, freq, species, lastWatered: Date.now(), history: [], photoId: pendingPhotoId || null};
+      const doc = {name, loc, freq, species, lastWatered: Date.now(), history: [], photoId: pendingPhotoId || null, photo: dataPhoto(photoUrl)};
       try{
         const ref = await plantsCol().add(doc);
         plants.push({id: ref.id, ...doc, photoUrl});
@@ -886,26 +1227,37 @@ async function askAI(question){
     return;
   }
 
-  // Fora do Claude: chama a função de servidor quando a app está no Netlify.
-  // O GitHub Pages só aloja ficheiros estáticos e não executa esta função.
-  if(location.hostname.endsWith('github.io')){
-    aiBubble.textContent = 'O assistente por IA precisa de uma função de servidor e não funciona diretamente no GitHub Pages.';
-    return;
-  }
   try{
-    const res = await fetch('./.netlify/functions/ask', {
-      method: 'POST',
-      headers: {'content-type':'application/json'},
-      body: JSON.stringify({turns})
-    });
-    const data = await res.json();
-    if(!res.ok) throw new Error(data.error || 'erro');
+    const data = await callGemini({turns});
     aiBubble.textContent = data.text;
     chatTurns.push({role:'assistant', content:data.text});
   }catch(err){
-    aiBubble.textContent = 'O assistente ainda não está configurado neste site (falta a função de servidor com a chave da API).';
+    aiBubble.textContent = err.message;
   }
 }
+
+async function callGemini(body){
+  if(location.protocol !== 'file:' && ['localhost','127.0.0.1'].includes(location.hostname)){
+    const response = await fetch('/api/ask', {
+      method:'POST',
+      headers:{'content-type':'application/json'},
+      body:JSON.stringify(body),
+    });
+    const result = await response.json().catch(()=>({}));
+    if(!response.ok) throw new Error(result.error || 'O assistente não conseguiu responder.');
+    return result;
+  }
+
+  if(window.VR_CONFIG?.FIREBASE_CONFIG && window.VR_CONFIG?.FIREBASE_APP_CHECK_SITE_KEY){
+    if(typeof window.generateFirebaseContent !== 'function'){
+      throw new Error('Não foi possível carregar o Firebase AI Logic. Atualiza a página e tenta novamente.');
+    }
+    return window.generateFirebaseContent(body);
+  }
+
+  throw new Error('O Firebase AI Logic ainda não está configurado. Regista a app Firebase, configura App Check e publica novamente pelo GitHub Actions.');
+}
+
 document.getElementById('aiSend').onclick = ()=>{
   const input = document.getElementById('aiInput');
   const q = input.value; input.value=''; askAI(q);
@@ -1008,7 +1360,106 @@ function suggestFreq(){
 gid('pSpecies').addEventListener('input', suggestFreq);
 gid('pName').addEventListener('input', suggestFreq);
 if('serviceWorker' in navigator && location.protocol === 'https:' && !/claude\.ai|claudeusercontent/.test(location.hostname)){ navigator.serviceWorker.register('sw.js').catch(()=>{}); }
-initIdentity().then(autoLogin);
+/* ---------- identificar planta por foto ---------- */
+function dataPhoto(u){ return (u && u.startsWith('data:')) ? u : null; }
+async function shrinkCanvas(file, max){
+  const bmp = await createImageBitmap(file); const s = Math.min(1, max/Math.max(bmp.width, bmp.height));
+  const c = document.createElement('canvas'); c.width = Math.round(bmp.width*s); c.height = Math.round(bmp.height*s);
+  c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height); return c;
+}
+async function shrinkURL(file){ return (await shrinkCanvas(file, 600)).toDataURL('image/jpeg', 0.8); }
+async function shrinkBlob(file){ const c = await shrinkCanvas(file, 1024); return await new Promise(r=>c.toBlob(r, 'image/jpeg', 0.85)); }
+function blobToB64(b){ return new Promise(r=>{ const f = new FileReader(); f.onload = ()=> r(String(f.result).split(',')[1]); f.readAsDataURL(b); }); }
+function renderId(j){
+  const box = gid('idResult'); box.textContent = '';
+  if(!j || j.erro){ box.textContent = 'Não vejo nenhuma planta nesta foto.'; return; }
+  const h = document.createElement('h3'); h.textContent = j.nome || 'Planta';
+  const sp = document.createElement('p'); sp.className = 'idsp'; sp.textContent = (j.especie || '') + (j.confianca ? ' · confiança ' + j.confianca : '');
+  const d = document.createElement('p'); d.textContent = 'Rega: a cada ~' + (j.rega_dias || 7) + ' dias. Luz: ' + (j.luz || '—') + '. ' + (j.dicas || '');
+  const b = document.createElement('button'); b.className = 'btn-solid'; b.textContent = 'Adicionar ao jardim';
+  b.onclick = ()=>{
+    resetPlantSheet(); gid('pName').value = j.nome || ''; gid('pSpecies').value = j.especie || '';
+    const dd = j.rega_dias || 7; gid('pFreq').value = String([3,7,14,21].reduce((a,c)=>Math.abs(c-dd)<Math.abs(a-dd)?c:a));
+    plantOverlay.classList.add('open');
+  };
+  box.append(h, sp, d, b);
+}
+async function identifyPlant(file){
+  const box = gid('idResult'); box.textContent = 'A analisar a foto…';
+  const prompt = 'Identifica a planta nesta fotografia. Responde APENAS com JSON válido, sem texto à volta nem blocos de código, com as chaves: "nome" (nome comum em português europeu), "especie" (nome científico), "confianca" ("alta", "média" ou "baixa"), "rega_dias" (inteiro, intervalo típico de rega), "luz" (frase curta), "dicas" (máx. 2 frases de cuidados). Se não houver planta visível, responde {"erro":"sem planta"}.';
+  try{
+    const blob = await shrinkBlob(file); let text;
+    if(claudeSample){ ({text} = await claudeSample(prompt, {images: blob})); }
+    else{
+      const d = await callGemini({turns:[{role:'user', content:prompt}], image:{mime:'image/jpeg', data: await blobToB64(blob)}});
+      text = d.text;
+    }
+    renderId(JSON.parse(text.replace(/```json|```/g, '').trim()));
+  }catch(e){ box.textContent = 'Não consegui identificar a planta. Tenta uma foto mais nítida, com a planta bem visível.'; }
+}
+gid('idBtn').onclick = ()=> gid('idInput').click();
+gid('idInput').onchange = e=>{ const f = e.target.files[0]; if(f) identifyPlant(f); e.target.value = ''; };
+
+/* ---------- Supabase (ativa quando VR_CONFIG tem URL e chave) ---------- */
+const SBCFG = window.VR_CONFIG || {};
+let sb = null;
+if(SBCFG.SUPABASE_URL && SBCFG.SUPABASE_KEY && window.supabase){ try{ sb = window.supabase.createClient(SBCFG.SUPABASE_URL, SBCFG.SUPABASE_KEY); }catch(e){ sb = null; } }
+function makeSbDb(userId){
+  const ref = (path)=>({
+    id: path.split('/').pop(),
+    collection: (c)=> colRef(path + '/' + c),
+    async get(){ const {data, error} = await sb.from('docs').select('data').eq('path', path).maybeSingle(); if(error) throw error; return {exists: !!data, data: ()=> data ? data.data : undefined}; },
+    async set(obj){ const {error} = await sb.from('docs').upsert({uid: userId, path, data: obj}); if(error) throw error; },
+    async update(obj){ const cur = await this.get(); await this.set({...(cur.exists ? cur.data() : {}), ...obj}); },
+    async delete(){ const {error} = await sb.from('docs').delete().eq('path', path); if(error) throw error; }
+  });
+  const colRef = (path)=>({
+    doc: (id)=> ref(path + '/' + id),
+    async get(){ const {data, error} = await sb.from('docs').select('path,data').like('path', path + '/%').not('path', 'like', path + '/%/%'); if(error) throw error; return {docs: (data||[]).map(r=>({id: r.path.split('/').pop(), data: ()=> r.data}))}; },
+    async add(obj){ const id = crypto.randomUUID(); const r = ref(path + '/' + id); await r.set(obj); return r; }
+  });
+  return {collection: colRef};
+}
+function sbEnter(user, name){
+  uid = user.id; claudeDb = makeSbDb(uid); claudeAssets = null;
+  enterApp(user.email, name || (user.user_metadata && user.user_metadata.name) || user.email);
+}
+async function sbAuto(){ const {data} = await sb.auth.getSession(); if(data.session) sbEnter(data.session.user); }
+if(sb){
+  gid('gSignupBtn').onclick = async ()=>{
+    const name = gid('sName').value.trim(), email = gid('sEmail').value.trim().toLowerCase(), p1 = gid('sPass').value, p2 = gid('sPass2').value, err = gid('signupErr');
+    if(!name){ err.textContent = 'Escreve o teu nome.'; return; }
+    if(!/^\S+@\S+\.\S+$/.test(email)){ err.textContent = 'Email inválido.'; return; }
+    if(p1.length < 6){ err.textContent = 'A senha precisa de pelo menos 6 caracteres.'; return; }
+    if(p1 !== p2){ err.textContent = 'As senhas não coincidem.'; return; }
+    const {data, error} = await sb.auth.signUp({email, password: p1, options:{data:{name}}});
+    if(error){ err.textContent = error.message; return; }
+    if(!data.session){ err.textContent = 'Conta criada. Confirma o email que te enviei e depois faz login.'; return; }
+    sbEnter(data.user, name);
+  };
+  gid('gLoginBtn').onclick = async ()=>{
+    const {data, error} = await sb.auth.signInWithPassword({email: gid('lEmail').value.trim().toLowerCase(), password: gid('lPass').value});
+    if(error){ gid('loginErr').textContent = 'Email ou senha incorretos.'; return; }
+    sbEnter(data.user);
+  };
+  gid('resetBox').firstChild.textContent = 'Escreve o teu email acima e envio-te um link para repores a senha. ';
+  gid('gReset').textContent = 'Enviar email de recuperação';
+  gid('gReset').onclick = async ()=>{
+    const email = gid('lEmail').value.trim().toLowerCase(); if(!email){ gid('loginErr').textContent = 'Escreve primeiro o teu email.'; return; }
+    const {error} = await sb.auth.resetPasswordForEmail(email, {redirectTo: location.origin});
+    gid('loginErr').textContent = error ? error.message : 'Enviei-te um email para repores a senha.';
+  };
+  gid('profLogout').onclick = async ()=>{ await sb.auth.signOut(); try{ localStorage.removeItem('vr_session'); }catch(e){} location.reload(); };
+  sb.auth.onAuthStateChange((ev)=>{ if(ev === 'PASSWORD_RECOVERY'){ const np = prompt('Nova senha (mín. 6 caracteres):'); if(np && np.length >= 6) sb.auth.updateUser({password: np}).then(r=> showToast(r.error ? r.error.message : 'Senha atualizada.')); } });
+}
+async function seedDemo(){
+  const a = getAccts(); const email = 'teste@teste.pt';
+  if(a[email]) return;
+  const salt = btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(16))));
+  a[email] = {name:'Teste', salt, hash: await hashPw('teste123', salt)};
+  setAccts(a);
+}
+seedDemo().catch(()=>{}).then(initIdentity).then(()=> sb ? sbAuto() : autoLogin());
 </script>
 </body>
 </html>

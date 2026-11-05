@@ -1,5 +1,10 @@
-const C = 'vr-v1';
-self.addEventListener('install', e => { e.waitUntil(caches.open(C).then(c => c.addAll(['./', 'index.html', 'icon.svg']))); self.skipWaiting(); });
+const C = 'vr-v5';
+self.addEventListener('install', e => { e.waitUntil(caches.open(C).then(c => c.addAll([
+  './', 'index.html', 'config.js', 'icon.svg',
+  'images/arranjo-peonias.jpg', 'images/arranjo-pastel.jpg',
+  'images/arranjo-silvestre.jpg', 'images/arranjo-rustico.jpg',
+  'images/arranjo-zen.jpg', 'images/arranjo-orquideas.jpg'
+]))); self.skipWaiting(); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(k => Promise.all(k.filter(x => x !== C).map(x => caches.delete(x))))); self.clients.claim(); });
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET' || e.request.url.includes('/.netlify/')) return;

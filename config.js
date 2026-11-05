@@ -1,0 +1,6 @@
+window.VR_CONFIG = {
+  SUPABASE_URL: '',
+  SUPABASE_KEY: '',
+  FIREBASE_CONFIG: null,
+  FIREBASE_APP_CHECK_SITE_KEY: '',
+};
