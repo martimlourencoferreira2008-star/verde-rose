@@ -167,13 +167,15 @@ main{padding: 16px 20px 100px;}
 .composer-actions{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-top:10px;border-top:1px solid var(--line);}
 .feed-photo-pick{font-size:.78rem;color:var(--sage-deep);font-weight:600;cursor:pointer;}
 .feed-publish{padding:9px 16px;border:0;border-radius:20px;background:var(--sage-deep);color:#fff;font-size:.78rem;font-weight:600;cursor:pointer;}
-.feed-preview{display:block;width:100%;max-height:210px;object-fit:cover;border-radius:12px;margin:6px 0 10px;}
+.feed-preview{display:block;width:100%;height:auto;max-height:210px;object-fit:contain;background:var(--cream);border-radius:12px;margin:6px 0 10px;}
 .post-card{animation:rise .35s ease both;}
 .post-header{display:flex;align-items:center;gap:10px;padding:13px 14px;}
+.post-header-main{display:flex;align-items:center;gap:10px;flex:1;min-width:0;}
 .post-avatar{width:38px;height:38px;display:grid;place-items:center;flex:none;border-radius:50%;background:var(--grad-green);color:#fff;font-family:'Fraunces',serif;font-size:1rem;font-weight:600;}
 .post-author{font-size:.8rem;font-weight:600;}
 .post-location{font-size:.68rem;color:var(--ink-soft);margin-top:3px;}
-.post-photo{display:block;width:100%;aspect-ratio:1/1;object-fit:cover;background:var(--cream);}
+.post-delete{flex:none;padding:7px 10px;border:1px solid var(--line);border-radius:16px;background:transparent;color:var(--rose);font:inherit;font-size:.7rem;font-weight:600;cursor:pointer;}
+.post-photo{display:block;width:100%;height:auto;max-height:480px;object-fit:contain;background:var(--cream);}
 .post-actions{display:flex;gap:16px;padding:11px 14px 0;}
 .post-action{display:flex;align-items:center;gap:6px;border:0;background:none;color:var(--ink);font:inherit;font-size:.78rem;cursor:pointer;}
 .post-action svg{width:22px;height:22px;}
@@ -225,6 +227,9 @@ nav.bottom button.active{color:var(--sage-deep); font-weight:600;}
 .profile-row img{width:52px;height:52px;border-radius:50%;}
 .profile-row h3{font-size:1rem;}
 .profile-row p{font-size:.78rem; color:var(--ink-soft);}
+.settings-choice{display:flex;flex-direction:column;gap:7px;margin:18px 0;}
+.settings-choice label{font-size:.82rem;font-weight:600;}
+.settings-choice select{width:100%;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);font:inherit;}
 .toggle-row{display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-top:1px solid var(--line);}
 .switch{width:42px;height:24px;border-radius:20px; background:var(--line); position:relative; cursor:pointer; flex:none;}
 .switch.on{background:var(--sage-deep);}
@@ -339,6 +344,17 @@ nav.bottom button{ min-height:52px; }
 :root{ --cream:#fbfdf9; --card:rgba(255,255,255,.74); --sage:#6f8f6a; --sage-deep:#3f5e44; --rose:#b0795f; --gold:#a38a5c; --ink:#243127; --ink-soft:#4b594f; --line:rgba(63,94,68,.12); --grad-green:#3f5e44; --grad-rose:#b0795f; }
 *{ animation:none!important; }
 body{ background:linear-gradient(180deg,#fcfdfa 0%,#fcfdfa 34%,#e9f1e4 70%,#cfe0c8 100%); background-attachment:fixed; }
+:root[data-theme="dark"] body{background:linear-gradient(180deg,#141b14 0%,#182219 55%,#202e22 100%);}
+:root[data-theme="dark"] body::before{opacity:.08;}
+:root[data-theme="dark"] header,:root[data-theme="dark"] nav.bottom{background:#182219;}
+:root[data-theme="dark"] .hero-banner{background:#2b3c2d;color:#e8eee5;}
+:root[data-theme="dark"] .curiosity-card{background:linear-gradient(135deg,#30271f,#382a28);color:#f0e5d5;}
+:root[data-theme="dark"] #gate{background:linear-gradient(180deg,#141b14,#202e22);color:#e8eee5;}
+:root[data-theme="dark"] .g-btn{background:#6f8f6a;color:#fff;}
+:root[data-theme="dark"] .g-link,:root[data-theme="dark"] .g-back{color:#e8eee5;}
+:root[data-theme="dark"] .g-input{color:#e8eee5;}
+:root[data-theme="dark"] .g-input::placeholder{color:rgba(232,238,229,.65);}
+:root[data-theme="dark"] .g-input:focus{border-bottom-color:#e8eee5;}
 body::before{ content:''; position:fixed; left:0; right:0; bottom:0; height:46vh; pointer-events:none; z-index:-1; opacity:.5; background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300' preserveAspectRatio='xMidYMax slice'%3E%3Cg fill='none' stroke='%233f5e44' stroke-opacity='.22' stroke-width='1.2'%3E%3Cpath d='M-10 300C40 210 70 160 130 120C120 190 90 250 40 300Z'/%3E%3Cpath d='M70 300C110 230 170 180 230 170C210 230 150 280 100 300Z'/%3E%3Cpath d='M300 300C310 230 350 170 420 130C420 200 380 270 330 300Z'/%3E%3Cpath d='M0 290C60 240 110 220 150 215M80 300C130 262 180 240 220 232M310 300C340 250 380 205 410 170'/%3E%3C/g%3E%3C/svg%3E") bottom/cover no-repeat; }
 header{ background:#fcfdfa; }
 .plant-card,.bouquet-card,.idcard,.idres,.tip,.stat{ background:var(--card); border:1px solid var(--line); box-shadow:none; border-radius:22px; }
@@ -611,13 +627,33 @@ nav.bottom button.active{ background:rgba(111,143,106,.18); }
       <div><h3 id="profName">—</h3><p id="profEmail">—</p></div>
     </div>
     <div id="orderList"></div>
-    <div class="toggle-row">
-      <span>Lembretes de rega</span>
-      <div class="switch" id="remindersToggle"><i></i></div>
-    </div>
     <div class="sheet-actions">
+      <button class="btn-ghost" id="openSettings">Definições</button>
       <button class="btn-ghost" id="profClose">Fechar</button>
       <button class="btn-solid" id="profLogout">Terminar sessão</button>
+    </div>
+  </div>
+</div>
+
+<!-- Settings sheet -->
+<div class="overlay" id="settingsOverlay">
+  <div class="sheet">
+    <h2>Definições</h2>
+    <div class="settings-choice">
+      <label for="themeSelect">Aspeto</label>
+      <select id="themeSelect">
+        <option value="system">Igual ao dispositivo</option>
+        <option value="light">Claro</option>
+        <option value="dark">Escuro</option>
+      </select>
+    </div>
+    <div class="toggle-row">
+      <span>Lembretes de rega</span>
+      <div class="switch" id="remindersToggle" role="switch" aria-label="Lembretes de rega" aria-checked="true" tabindex="0"><i></i></div>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn-ghost" id="settingsBack">Voltar ao perfil</button>
+      <button class="btn-solid" id="settingsClose">Concluído</button>
     </div>
   </div>
 </div>
@@ -672,6 +708,10 @@ function showToast(msg){
 function lsLoad(){
   try{ plants = JSON.parse(localStorage.getItem('vr_plants_'+acctKey)||'[]'); }catch(e){ plants = []; }
   try{ cart = JSON.parse(localStorage.getItem('vr_cart_'+acctKey)||'[]'); }catch(e){ cart = []; }
+  try{
+    const savedReminders = localStorage.getItem('vr_reminders_'+acctKey);
+    if(savedReminders !== null) remindersEnabled = savedReminders === 'true';
+  }catch(e){}
   if(!plants.length){
     plants = [];
   }
@@ -707,7 +747,12 @@ async function saveCart(){
   lsSave();
 }
 async function saveProfile(){
-  if(claudeDb && uid){ try{ await profileDoc().set({remindersEnabled}); }catch(e){} }
+  try{ localStorage.setItem('vr_reminders_'+acctKey, String(remindersEnabled)); }
+  catch(error){ throw new Error('Não foi possível guardar a preferência neste dispositivo.'); }
+  if(claudeDb && uid){
+    try{ await profileDoc().set({remindersEnabled}); }
+    catch(error){ throw new Error('A preferência foi guardada neste dispositivo, mas não foi sincronizada com a conta.'); }
+  }
 }
 
 /* ---------- rendering ---------- */
@@ -822,14 +867,18 @@ function renderFeed(){
   container.textContent = '';
   const posts = [...feedState.posts, ...starterPosts];
   posts.forEach(post=>{
+    const isOwnPost = feedState.posts.some(savedPost=>savedPost.id===post.id);
     const card = document.createElement('article');
     card.className = 'post-card';
     const comments = Array.isArray(feedState.comments[post.id]) ? feedState.comments[post.id] : [];
     const liked = feedState.likes.includes(post.id);
     card.innerHTML = `
       <div class="post-header">
-        <div class="post-avatar" aria-hidden="true"></div>
-        <div><div class="post-author"></div><div class="post-location"></div></div>
+        <div class="post-header-main">
+          <div class="post-avatar" aria-hidden="true"></div>
+          <div><div class="post-author"></div><div class="post-location"></div></div>
+        </div>
+        ${isOwnPost ? '<button class="post-delete" type="button" data-action="delete">Apagar</button>' : ''}
       </div>
       ${post.image ? `<img class="post-photo" src="${post.image}" alt="Fotografia de uma publicação de jardinagem" loading="lazy" decoding="async">` : ''}
       <div class="post-actions">
@@ -866,6 +915,28 @@ function renderFeed(){
       commentList.appendChild(line);
     });
     container.appendChild(card);
+    if(isOwnPost){
+      card.querySelector('[data-action="delete"]').onclick = ()=>{
+        if(!confirm('Queres apagar esta publicação?')) return;
+        const previous = feedState;
+        feedState = {
+          ...feedState,
+          posts: feedState.posts.filter(savedPost=>savedPost.id!==post.id),
+          likes: feedState.likes.filter(id=>id!==post.id),
+          comments: {...feedState.comments},
+        };
+        delete feedState.comments[post.id];
+        try{
+          saveFeedState();
+          openFeedComments.delete(post.id);
+          renderFeed();
+          showToast('Publicação apagada.');
+        }catch(error){
+          feedState = previous;
+          showToast('Não foi possível apagar a publicação. Verifica o espaço disponível no dispositivo.');
+        }
+      };
+    }
     card.querySelector('[data-action="like"]').onclick = ()=>{
       const likedNow = feedState.likes.includes(post.id);
       feedState.likes = likedNow
@@ -964,6 +1035,7 @@ document.getElementById('gateEnter').onclick = async ()=>{
   }
   if(!usedDb) lsLoad();
   document.getElementById('remindersToggle').classList.toggle('on', remindersEnabled);
+  document.getElementById('remindersToggle').setAttribute('aria-checked', String(remindersEnabled));
   renderPlants(); renderBouquets(); feedState = loadFeedState(); renderFeed(); updateCartBadge(); notifyDue();
 };
 
@@ -1169,6 +1241,31 @@ document.getElementById('cartCheckout').onclick = async ()=>{
 
 /* ---------- profile sheet ---------- */
 const profileOverlay = document.getElementById('profileOverlay');
+const settingsOverlay = document.getElementById('settingsOverlay');
+const themeSelect = document.getElementById('themeSelect');
+function applyTheme(theme){
+  if(theme==='light' || theme==='dark') document.documentElement.dataset.theme = theme;
+  else document.documentElement.removeAttribute('data-theme');
+}
+function loadTheme(){
+  let theme = 'system';
+  try{
+    const saved = localStorage.getItem('vr_theme');
+    if(['system','light','dark'].includes(saved)) theme = saved;
+  }catch(error){
+    showToast('Não foi possível carregar as definições guardadas.');
+  }
+  themeSelect.value = theme;
+  applyTheme(theme);
+}
+themeSelect.onchange = ()=>{
+  try{
+    localStorage.setItem('vr_theme', themeSelect.value);
+    applyTheme(themeSelect.value);
+  }catch(error){
+    showToast('Não foi possível guardar a preferência de aspeto.');
+  }
+};
 document.getElementById('profileBtn').onclick = async ()=>{
   profileOverlay.classList.add('open');
   const list = await loadOrders(); const box = gid('orderList'); box.textContent = '';
@@ -1178,14 +1275,29 @@ document.getElementById('profileBtn').onclick = async ()=>{
   }
 };
 document.getElementById('profClose').onclick = ()=> profileOverlay.classList.remove('open');
+document.getElementById('openSettings').onclick = ()=>{
+  profileOverlay.classList.remove('open');
+  settingsOverlay.classList.add('open');
+};
+document.getElementById('settingsBack').onclick = ()=>{
+  settingsOverlay.classList.remove('open');
+  profileOverlay.classList.add('open');
+};
+document.getElementById('settingsClose').onclick = ()=> settingsOverlay.classList.remove('open');
 document.getElementById('remindersToggle').onclick = async function(){
   remindersEnabled = !remindersEnabled;
   this.classList.toggle('on', remindersEnabled);
+  this.setAttribute('aria-checked', String(remindersEnabled));
   if(remindersEnabled && 'Notification' in window && Notification.permission === 'default'){ Notification.requestPermission().then(()=>notifyDue()); }
-  await saveProfile();
+  try{ await saveProfile(); }
+  catch(error){ showToast(error.message); }
 };
+document.getElementById('remindersToggle').onkeydown = function(event){
+  if(event.key==='Enter' || event.key===' '){ event.preventDefault(); this.click(); }
+};
+loadTheme();
 
-[plantOverlay, cartOverlay, profileOverlay].forEach(ov=>{
+[plantOverlay, cartOverlay, profileOverlay, settingsOverlay].forEach(ov=>{
   ov.addEventListener('click', e=>{
     if(e.target===ov){ ov.classList.remove('open'); if(ov===plantOverlay) resetPlantSheet(); }
   });
@@ -1330,10 +1442,6 @@ gid('gLoginBtn').onclick = async ()=>{
 };
 document.querySelectorAll('.g-input').forEach(i=> i.addEventListener('keydown', e=>{ if(e.key==='Enter') i.closest('.gscreen').querySelector('.g-btn').click(); }));
 gid('profLogout').onclick = ()=>{ try{ localStorage.removeItem('vr_session'); }catch(e){} location.reload(); };
-function autoLogin(){
-  let s = null; try{ s = localStorage.getItem('vr_session'); }catch(e){}
-  const a = getAccts(); if(s && a[s]) enterApp(s, a[s].name);
-}
 async function loadOrders(){
   if(claudeDb && uid){ try{ const d = await userCol().doc('orders-'+acctKey).get(); return d.exists ? (d.data().list||[]) : []; }catch(e){} }
   try{ return JSON.parse(localStorage.getItem('vr_orders_'+acctKey)||'[]'); }catch(e){ return []; }
@@ -1424,7 +1532,6 @@ function sbEnter(user, name){
   uid = user.id; claudeDb = makeSbDb(uid); claudeAssets = null;
   enterApp(user.email, name || (user.user_metadata && user.user_metadata.name) || user.email);
 }
-async function sbAuto(){ const {data} = await sb.auth.getSession(); if(data.session) sbEnter(data.session.user); }
 if(sb){
   gid('gSignupBtn').onclick = async ()=>{
     const name = gid('sName').value.trim(), email = gid('sEmail').value.trim().toLowerCase(), p1 = gid('sPass').value, p2 = gid('sPass2').value, err = gid('signupErr');
@@ -1459,7 +1566,7 @@ async function seedDemo(){
   a[email] = {name:'Teste', salt, hash: await hashPw('teste123', salt)};
   setAccts(a);
 }
-seedDemo().catch(()=>{}).then(initIdentity).then(()=> sb ? sbAuto() : autoLogin());
+seedDemo().catch(()=>{}).then(initIdentity).then(()=>showG('gWelcome'));
 </script>
 </body>
 </html>

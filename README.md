@@ -53,6 +53,38 @@ mais recente terminou com sucesso. Depois recarrega o site.
 Se a branch principal tiver outro nome, atualiza `main` no gatilho de
 `.github/workflows/pages.yml`.
 
+### Enviar as fotografias pelo site do GitHub
+
+As fotografias dos arranjos têm de estar no repositório, dentro de `images`,
+com estes nomes exatos:
+
+- `arranjo-peonias.jpg`
+- `arranjo-pastel.jpg`
+- `arranjo-silvestre.jpg`
+- `arranjo-rustico.jpg`
+- `arranjo-zen.jpg`
+- `arranjo-orquideas.jpg`
+
+Para as adicionar sem instalar Git:
+
+1. Abre o repositório no GitHub e escolhe **Add file → Create new file**.
+2. No nome do ficheiro escreve `images/.gitkeep` e confirma com **Commit changes**.
+   Isto cria a pasta `images`.
+3. Abre a pasta `images` no repositório. Escolhe **Add file → Upload files** e
+   arrasta para a página os seis ficheiros `.jpg` da pasta `images` no teu
+   computador.
+4. Confirma os nomes e escolhe **Commit changes**. Depois recarrega o site.
+
+### Publicações e definições
+
+As fotografias do feed mantêm a proporção original para evitar cortes e
+deformações. As publicações criadas neste dispositivo têm um botão **Apagar**
+no cabeçalho; a remoção pede confirmação.
+
+Abre o ícone de perfil e escolhe **Definições** para selecionar o aspeto claro,
+escuro ou igual ao dispositivo e para ativar/desativar os lembretes de rega.
+Estas preferências são guardadas neste dispositivo.
+
 ### Executar localmente
 
 Para experimentar o site sem publicar, instala Node.js 20.6 ou superior, copia
