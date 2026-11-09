@@ -81,6 +81,9 @@ As fotografias do feed mantêm a proporção original para evitar cortes e
 deformações. As publicações criadas neste dispositivo têm um botão **Apagar**
 no cabeçalho; a remoção pede confirmação.
 
+As imagens das publicações de exemplo estão em `images/posts`; as fotografias
+dos arranjos de catálogo continuam em `images`.
+
 Abre o ícone de perfil e escolhe **Definições** para selecionar o aspeto claro,
 escuro ou igual ao dispositivo e para ativar/desativar os lembretes de rega.
 Estas preferências são guardadas neste dispositivo.
